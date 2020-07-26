@@ -144,9 +144,6 @@
 	org $01946C
 	autoclean JML Sprite_VertLvl_Blk_interXPos
 
-	org $019481
-	autoclean JML Sprite_VertLvl_Blk_interXPos2
-
 	freecode
 
 ConstrainMarioCollisionPoints: ;>JML from $00F451
@@ -485,104 +482,103 @@ Sprite_HorizLvl_blk_interXPos:		;>JML from $0194EE, 8-bit A from here.
 
 
 Sprite_VertLvl_Blk_interXPos:		;>$JML from $01946C
-	;$0A-$0B = sprite collision point X position.
-	if !Setting_LevelConstrain_RAM_Based != 0
-		LDA !Freeram_LevelConstrain
-		AND.b #%00000011
-		BNE +
-		
-		LDA !E4,x		;\Restore
-		CLC			;|
-		ADC.w $0190BA,y		;|
-		JML $019472		;/
-		
-		+
-	endif
-	.Top
-		if !Setting_LevelConstrain_RAM_Based != 0
-			LDA !Freeram_LevelConstrain
-			AND.b #%00000010
-			BEQ .Bottom
-		endif
-		REP #$20
-		LDA #$0000			;>Top border
-		CMP $0C				;>Collision point Y Position
-		BPL .Exceed			;>If top edge is below collision point (collision point above)
-	.Bottom
-		SEP #$20
-		if !Setting_LevelConstrain_RAM_Based != 0
-			LDA !Freeram_LevelConstrain
-			AND.b #%00000001
-			BEQ .NotExceed
-		endif
-		LDA $5F				;\Bottom edge of level
-		DEC				;|
-		XBA				;|
-		LDA #$FF			;/
-		REP #$20
-		CMP $0C				;>Collision point Y position
-		BMI .Exceed			;>check if bottom edge is above collision point (collision point below)
-	.NotExceed
-		SEP #$20
-		BRA .Restore
-
-	.Exceed
-		STA $0C
-		SEP #$20
-		AND #$F0
-		STA $00				;>In case of weird glitches happen that aligns with grid ($01945F)
-
-	.Restore
-		LDA !E4,x
+	;$0C-$0D = sprite collision point Y position.
+	;$00 = block Y position.
+	;$01 = block X position.
+	;Hijacked a part of code that writes the X position to $0A-$0B.
+	
+	.GetXPosition
+		LDA !E4,x				;\Restore for $01946C-$019480 (without the BCS... yet)
 		CLC
 		ADC.w $0190BA,y
-		JML $019472
-
-Sprite_VertLvl_Blk_interXPos2:		;>JML from $019481
-	;$0A-$0B = sprite collision point X position.
-	if !Setting_LevelConstrain_RAM_Based != 0
-		LDA !Freeram_LevelConstrain
-		AND.b #%00000011
-		BNE +
-		
-		LDA $01		;\Restore
-		LSR #2		;|
-		JML $019485	;/
-		
-		+
-	endif
-	.LeftSide
-		if !Setting_LevelConstrain_RAM_Based
-			LDA !Freeram_LevelConstrain
-			AND.b #%00000010
-			BEQ .RightSide
-		endif
+		STA $0A
+		STA $01
+		LDA !14E0,x
+		ADC #$00
+		STA $0B					;/
+		;Now $0A-$0B contains the collision point X position.
+	.CheckSides
 		REP #$20
-		LDA #$0000			;>Left edge
-		CMP $0A				;>Collision point x position
-		BPL .Exceed			;>if left edge is right of collision (collision is left of edge)
-	.RightSide
-		if !Setting_LevelConstrain_RAM_Based
-			SEP #$20
+		if !Setting_LevelConstrain_RAM_Based != 0
 			LDA !Freeram_LevelConstrain
-			AND.b #%00000001
-			BEQ .NotExceed
-			REP #$20
+			AND.w #%0000000000000011
+			BEQ ..GetBlockXPosition
 		endif
-		LDA #$01FF			;>Right edge
-		CMP $0A				;>Collision point x position
-		BMI .Exceed			;>If right edge is left of collision (collision is right of it)
-	.NotExceed
-		SEP #$20
-		BRA .Restore
-	
-	.Exceed
-		STA $0A				;>Limit
-		SEP #$20
-		STA $01				;>Also limit the copied x position
-
-	.Restore
-		LDA $01				;\Restore code.
-		LSR				;|
-		LSR				;/
-		JML $019485
+		..Left
+			if !Setting_LevelConstrain_RAM_Based != 0
+				LDA !Freeram_LevelConstrain
+				AND.w #%0000000000000010
+				BEQ ..Right
+			endif
+			LDA #$0000			;>Top border
+			CMP $0A				;>Collision point Y Position
+			BPL ..Exceed			;>If top edge is below collision point (collision point above)
+		..Right
+			if !Setting_LevelConstrain_RAM_Based != 0
+				LDA !Freeram_LevelConstrain
+				AND.w #%0000000000000001
+				BEQ ..GetBlockXPosition
+			endif
+			LDA #$01FF
+			CMP $0A
+			;BMI ..Exceed			;>check if right edge is to the left of collision point (or collision point to far to the right)
+			BPL ..GetBlockXPosition
+		..Exceed
+			STA $0A				;>Clamp X position
+		..GetBlockXPosition
+			SEP #$20
+			LDA $0A				;\Restore for $019472-$019475
+			STA $01				;/
+			
+	.CheckTopBottom
+		REP #$20
+		if !Setting_LevelConstrain_RAM_Based != 0
+			LDA !Freeram_LevelConstrain
+			AND.w #%0000000000001100
+			BEQ ..GetBlockYPosition
+		endif
+		..Top
+			if !Setting_LevelConstrain_RAM_Based != 0
+				LDA !Freeram_LevelConstrain
+				AND.w #%0000000000001000
+				BEQ ..Bottom
+			endif
+			LDA #$0000			;\If top of level is below collision point (or collision point above top)
+			CMP $0C				;|clamp it
+			BPL ..Exceed			;/
+		..Bottom
+			if !Setting_LevelConstrain_RAM_Based != 0
+				LDA !Freeram_LevelConstrain
+				AND.w #%0000000000000100
+				BEQ ..GetBlockYPosition
+			endif
+			SEP #$20
+			LDA $5F				;\Bottom edge of level
+			DEC				;|
+			XBA				;|
+			LDA #$FF			;/
+			REP #$20
+			CMP $0C				;>Collision point Y position
+			;BMI ..Exceed			;>If bottom of level is above collision point (or collision point below bottom), clamp Y pos
+			BPL ..GetBlockYPosition
+		..Exceed
+			STA $0C
+		..GetBlockYPosition
+			SEP #$20
+			LDA $0C
+			AND #$F0
+			STA $00
+	.IgnoreInvalidDataOutsideLevel
+		;Failsafe measures to prevent treating outside level "blocks" and crashing the game.
+		.HorizontalIgnore
+			LDA $0B
+			CMP #$02
+			BCS .Out
+		.VerticalIgnore
+			LDA $0D
+			CMP $5D
+			BCS .Out
+		.In
+			JML $019481
+		.Out
+			JML $0194B4
