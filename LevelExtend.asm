@@ -140,30 +140,33 @@
 ;CODE_0194B6:        A9 00         LDA.B #$00                ;\Set behavor?
 
 
-	if !Setting_LevelConstrain_RAM_Based == 0
-		if read1($019466) == $5C
-			autoclean read3($019466+1)
-		endif
-		org $019466				;>This is so that it gets the full Y pos info without branching out.
-		nop #4
-	else
-		org $019466
-		JML Sprite_Block_LastScreenHijack
-	endif
+;	if !Setting_LevelConstrain_RAM_Based == 0
+;		if read1($019466) == $5C
+;			autoclean read3($019466+1)
+;		endif
+;		org $019466				;>This is so that it gets the full Y pos info without branching out.
+;		nop #4
+;	else
+;		org $019466
+;		JML Sprite_Block_LastScreenHijack
+;	endif
+	
+	org $019466
+	nop #4
 
 	org $01946C
 	autoclean JML Sprite_VertLvl_Blk_interXPos
 
-	if !Setting_LevelConstrain_RAM_Based == 0
-		if read1($01947B) == $5C
-			autoclean read3($01947B+1)
-		endif
-		org $01947B
-		nop #4				;>Same thing as above
-	else
-		org $01947B
-		JML Sprite_Block_LastScreenHijack2
-	endif
+;	if !Setting_LevelConstrain_RAM_Based == 0
+;		if read1($01947B) == $5C
+;			autoclean read3($01947B+1)
+;		endif
+;		org $01947B
+;		nop #4				;>Same thing as above
+;	else
+;		org $01947B
+;		JML Sprite_Block_LastScreenHijack2
+;	endif
 
 	freecode
 
@@ -434,71 +437,71 @@ Sprite_HorizLvl_blk_interXPos:		;>JML from $0194EE, 8-bit A from here.
 		BRA .CheckIfXPosInLevel
 
 	if !Setting_LevelConstrain_RAM_Based != 0
-	;	Sprite_Block_LastScreenHijack: ;>JML from $019466, 8-bit A
-	;		;This is the vertical level bottom.
-	;		;$0C-$0D = Sprite collision point Y position (high byte garbage if beyond bottom of level)
-	;		;The hijack is situated after setting $0C but before $0D.
-	;		STA $0D				;>Get high byte of Y position
-	;		.TopCheck
-	;			LDA !Freeram_LevelConstrain
-	;			AND.b #%00001000
-	;			BEQ .BottomCheck
-	;			
-	;			..TopVerticalLevelOn
-	;				REP #$20
-	;				LDA #$0000
-	;				CMP $0C
-	;				BPL ...Exceed
-	;				BRA .BottomCheck
-	;				
-	;				...Exceed
-	;				STA $0C
-	;			..TopVerticalLevelOff
-	;		.BottomCheck
-	;			SEP #$20
-	;			LDA !Freeram_LevelConstrain	;\bottom bit
-	;			AND.b #%00000100		;/
-	;			BEQ .Restore			;>If down bit is set, goto $01946C to interact with bottom row of blocks.
-	;		
-	;			..BottomVertLevelOn
-	;				LDA $5D				;\The bottom position
-	;				DEC				;|
-	;				XBA				;|
-	;				LDA #$FF			;/
-	;				REP #$20			;\Compare with collision point
-	;				CMP $0C				;/
-	;				BMI ...Exceed			;>If Bottom position located above collision point (or collision point below bottom), clamp it.
-	;				BRA .Restore
-	;				...Exceed
-	;					STA $0C
-	;					SEP #$20
-	;		.Restore
-	;			..DontInteractWithInvalidBlocks
-	;				LDA $0D
-	;				CMP $5D
-	;				BCC ...Safe
-	;				
-	;				...Goto0194B4
-	;					JML $0194B4			;>No blocks outside level
-	;				...Safe
-	;					JML $01946C			;>Go to another hijacked code with clamped block interactions.
+;		Sprite_Block_LastScreenHijack: ;>JML from $019466, 8-bit A
+;			;This is the vertical level bottom.
+;			;$0C-$0D = Sprite collision point Y position (high byte garbage if beyond bottom of level)
+;			;The hijack is situated after setting $0C but before $0D.
+;			STA $0D				;>Get high byte of Y position
+;			.TopCheck
+;				LDA !Freeram_LevelConstrain
+;				AND.b #%00001000
+;				BEQ .BottomCheck
+;				
+;				..TopVerticalLevelOn
+;					REP #$20
+;					LDA #$0000
+;					CMP $0C
+;					BPL ...Exceed
+;					BRA .BottomCheck
+;					
+;					...Exceed
+;					STA $0C
+;				..TopVerticalLevelOff
+;			.BottomCheck
+;				SEP #$20
+;				LDA !Freeram_LevelConstrain	;\bottom bit
+;				AND.b #%00000100		;/
+;				BEQ .Restore			;>If down bit is set, goto $01946C to interact with bottom row of blocks.
+;			
+;				..BottomVertLevelOn
+;					LDA $5D				;\The bottom position
+;					DEC				;|
+;					XBA				;|
+;					LDA #$FF			;/
+;					REP #$20			;\Compare with collision point
+;					CMP $0C				;/
+;					BMI ...Exceed			;>If Bottom position located above collision point (or collision point below bottom), clamp it.
+;					BRA .Restore
+;					...Exceed
+;						STA $0C
+;						SEP #$20
+;			.Restore
+;				..DontInteractWithInvalidBlocks
+;					LDA $0D
+;					CMP $5D
+;					BCC ...Safe
+;					
+;					...Goto0194B4
+;						JML $0194B4			;>No blocks outside level
+;					...Safe
+;						JML $01946C			;>Go to another hijacked code with clamped block interactions.
 		
-		Sprite_Block_LastScreenHijack2: ;>JML from $01947B
-		PHA
-		LDA !Freeram_LevelConstrain
-		AND.b #%00000001		;
-		BNE +				;>If right bit is set, goto $01947F to interact with right column of blocks
-		PLA				
-		CMP #$02			
-		BCS .CODE_0194B4		;>If high byte were to be on the 3rd screen and beyond (there is no third screen and beyond), assume no blocks exist.
-		JML $01947F
-		
-		.CODE_0194B4:
-		JML $0194B4			;>No blocks outside level
-		
-		+
-		PLA
-		JML $01947F			;>With the constrain bit set, allow interaction with blocks.
+;		Sprite_Block_LastScreenHijack2: ;>JML from $01947B
+;		PHA
+;		LDA !Freeram_LevelConstrain
+;		AND.b #%00000001		;
+;		BNE +				;>If right bit is set, goto $01947F to interact with right column of blocks
+;		PLA				
+;		CMP #$02			
+;		BCS .CODE_0194B4		;>If high byte were to be on the 3rd screen and beyond (there is no third screen and beyond), assume no blocks exist.
+;		JML $01947F
+;		
+;		.CODE_0194B4:
+;		JML $0194B4			;>No blocks outside level
+;		
+;		+
+;		PLA
+;		JML $01947F			;>With the constrain bit set, allow interaction with blocks.
 	endif
 
 
