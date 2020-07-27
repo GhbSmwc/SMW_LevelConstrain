@@ -1,0 +1,37 @@
+<html>
+	<head>
+		<style>
+			html {
+			background-color: #000207;
+			color: white;
+			font-family: sans-serif;
+			}
+			
+			table, th, td {
+			border: 1px solid white;
+			border-collapse: collapse;
+			}
+			
+			span.NoLineBreak {
+				white-space: nowrap;
+			}
+			
+			abbr{cursor: help;}
+		</style>
+	</head>
+<body>
+<p>All you have to do is open the patch <kbd>LevelExtend.asm</kbd>, change the defines if necessary, then use Asar to patch it into your game.</p>
+
+<p>However, if you are here just to understand how this patch works, well it works like this towards the player (going past the right edge of the level with
+the level border represented as a black vertical line, with &ldquo;<a href="https://www.smwcentral.net/?p=section&a=details&id=14978">Disable Screen Barrier via RAM</a>&rdquo; patch installed):<br>
+<img src="readme_files/ClampedPlayerHitbox.gif"><br>
+The green box is the &ldquo;actual&rdquo; player position. The dots in the black box represent the collision points, the way how SMW
+detects collision with objects is by checking if a given point is in one of the squares of the 16x16 grid. When the player's body goes past the level border,
+it will be clamped along the border of the level. All collision points will stop <b>together</b> if his position (<kbd>$7E0094</kbd> and <kbd>$7E0096</kbd>
+happens to be out of bounds.</p>
+
+<p>For sprites, it is the same, but the collision points are stopped <b>individually</b> (all collision points will stop <b>at the same X or Y position as the line</b> rather than stopping
+all of them at their current position when one is at the border). Why? Well it is because not all sprites have the same object collision positions and all of them will have
+way more collision fields than the player. If it was similar to the player, big sprites may interact with a line of blocks (both horizontal and vertical) that <b>are
+not at the level edge</b>:<br>
+<img src="readme_files/ClampedSpriteHitbox.gif"></p>
