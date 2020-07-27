@@ -119,8 +119,10 @@
 	org $0194EE
 	autoclean JML Sprite_HorizLvl_blk_interXPos
 
-;CODE_019466:        C5 5D         CMP RAM_ScreensInLvl       ;\Hijack, ignore the "skip all" which causes sprite ignore all blocks and instead
-;CODE_019468:        B0 4A         BCS CODE_0194B4            ;/
+;CODE_019461:        BD D4 14      LDA.W RAM_SpriteYHi,X      ;\Get carry if Y pos exceeds #$FF
+;CODE_019464:        69 00         ADC.B #$00                 ;/
+;CODE_019466:        C5 5D         CMP RAM_ScreensInLvl       ;\Hijack, ignore the "skip all" which causes sprite ignore all blocks even when the "top" bit is set
+;CODE_019468:        B0 4A         BCS CODE_0194B4            ;/to force the sprite to interact with the top row of blocks.
 ;CODE_01946A:        85 0D         STA $0D                    ;
 ;CODE_01946C:        B5 E4         LDA RAM_SpriteXLo,X        ;\Hijack*
 ;CODE_01946E:        18            CLC                        ;|
@@ -129,8 +131,13 @@
 ;CODE_019474:        85 01         STA $01                    ;
 ;CODE_019476:        BD E0 14      LDA.W RAM_SpriteXHi,X      ;
 ;CODE_019479:        69 00         ADC.B #$00                 ;
-;CODE_01947B:        C9 02         CMP.B #$02                 ;\Hijack, ignore the "skip all" which causes sprite ignore all blocks and instead
-;CODE_01947D:        B0 35         BCS CODE_0194B4            ;/
+;CODE_01947B:        C9 02         CMP.B #$02                 ;\This is going to be skipped by $01946C!
+;CODE_01947D:        B0 35         BCS CODE_0194B4            ;/Either jumps to $019481 or $0194B4
+;CODE_01947F:        85 0B         STA $0B                    ;
+;CODE_019481:        A5 01         LDA $01                    ;
+;...
+;CODE_0194B4:        A4 0F         LDY $0F                   ;>???
+;CODE_0194B6:        A9 00         LDA.B #$00                ;\Set behavor?
 
 
 	if !Setting_LevelConstrain_RAM_Based == 0
