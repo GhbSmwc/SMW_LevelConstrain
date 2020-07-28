@@ -35,3 +35,17 @@ all of them at their current position when one is at the border). Why? Well it i
 way more collision fields than the player. If it was similar to the player, big sprites may interact with a line of blocks (both horizontal and vertical) that <b>are
 not at the level edge</b>:<br>
 <img src="readme_files/ClampedSpriteHitbox.gif"></p>
+
+<p>Essentially, any block placed at the border, including layer 2, will be interacted with when the player and/or sprite is outside the level boundaries. Good for preventing the
+player or sprite from flying or swimming under or over the level (placing solid blocks at the border will also be solid outside the level boundaries and beyond).</p>
+
+<p>This is also useful for making custom blocks do special things to the player when leaving the edge of the level (rather than 1 or 2 blocks away from the outside of the level), as demonstrated with
+my &ldquo;<a href="https://www.smwcentral.net/?p=section&a=details&id=15751">edge level blocks</a>&rdquo; pack (which makes it look like the user have placed teleport blocks just past the right edge
+of the level).</p>
+
+<h2>Notes</h2>
+<ul>
+ <li>This also applies to blocks that shouldn't be interacted with the player/sprite is far away, such as coins, <abbr title="? blocks, turn blocks, note blocks, on/off switch, yellow and green ! switch blocks, etc.">bounceable blocks</abbr>,
+ and most other blocks that don't look like they extend to infinity.</li>
+ <li>Placing slopes and ledges at the top of the level means the player above them will always be on the ledges and can <abbr title="Well, until you reached Y=$8000 (if you disabled the screen barrier) since this ASM and SMW uses signed 16-bit Y position, so underflows will happen">infinity ascend</abbr> by repeatedly jumping.</li>
+</ul>
