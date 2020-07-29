@@ -22,6 +22,12 @@
 <body>
 <p>All you have to do is open the patch <kbd>LevelExtend.asm</kbd>, change the defines if necessary, then use Asar to patch it into your game.</p>
 
+<p>Very likely if you need only the top and bottom blocks to be interacted when the player is above or below the level, since the sides of the level cannot be bypassed anyway
+(the screen have 8 pixels wide zone on either side that are solid to the player).</p>
+
+<p>Not to be confused with the screen constrain patch, which only limits the player's object collision to the borders of the screen and not the level, which that is prone to issues
+if you deliberately want the player offscreen and the screen scrolls and positioned so that the block on the edge of the screen is where the player's hitbox is at and kills him.</p>
+
 <p>However, if you are here just to understand how this patch works, well it works like this towards the player (going past the right edge of the level with
 the level border represented as a black vertical line, with &ldquo;<a href="https://www.smwcentral.net/?p=section&a=details&id=14978">Disable Screen Barrier via RAM</a>&rdquo; patch installed):<br>
 <img src="readme_files/ClampedPlayerHitbox.gif"><br>
@@ -37,7 +43,9 @@ not at the level edge</b>:<br>
 <img src="readme_files/ClampedSpriteHitbox.gif"></p>
 
 <p>Essentially, any block placed at the border, including layer 2, will be interacted with when the player and/or sprite is outside the level boundaries. Good for preventing the
-player or sprite from flying or swimming under or over the level (placing solid blocks at the border will also be solid outside the level boundaries and beyond).</p>
+player or sprite from flying or swimming under or over the level (placing solid blocks at the border will also be solid outside the level boundaries and beyond). A good alternative to
+my <a href="https://www.smwcentral.net/?p=section&a=details&id=13147">pit fix</a> or a <a href="https://www.smwcentral.net/?p=section&a=details&id=19842">Bottomless Pit Code</a> that
+simply zero out the player's X speed for being above and below the level even when not being above or under a solid block acting as a wall.</p>
 
 <p>This is also useful for making custom blocks do special things to the player when leaving the edge of the level (rather than 1 or 2 blocks away from the outside of the level), as demonstrated with
 my &ldquo;<a href="https://www.smwcentral.net/?p=section&a=details&id=15751">edge level blocks</a>&rdquo; pack (which makes it look like the user have placed teleport blocks just past the right edge
@@ -45,7 +53,15 @@ of the level).</p>
 
 <h2>Notes</h2>
 <ul>
+ <li>While they can be thought as blocks extending towards infinity, they're not. Because all numbers in computers have limits (more specifically, integers), wraparound can occur. This patch uses &ldquo;signed compare&rdquo;
+ (<kbd>CMP</kbd>, and then <kbd>BPL</kbd>/<kbd>BMI</kbd>, not <kbd>BCC</kbd>/<kbd>BCS</kbd>) to deal with negative values (when the player or sprite is beyond the top or left border of the level). The overflow will happen at
+ [<kbd><abbr title="Top/Left for H and V-levels: #$0000. Bottom for H-levels: [ValueIn_13D7 - 1]. Right for H-levels: [((ValueIn_5E - 1) * 256) + 255]. Bottom for V-levels: [((ValueIn_5F - 1) * 256) + 255]. Right for V-levels: #$01FF.">BoundaryXY</abbr> &plusmn; $8000</kbd>] in which mario/sprite will start interacting with blocks <i>at the opposite</i> side of the entire level. This bug is extremely unlikely as it requires the player to be at extremely far
+ beyond the border.</li>
  <li>This also applies to blocks that shouldn't be interacted with the player/sprite is far away, such as coins, <abbr title="? blocks, turn blocks, note blocks, on/off switch, yellow and green ! switch blocks, etc.">bounceable blocks</abbr>,
- and most other blocks that don't look like they extend to infinity.</li>
- <li>Placing slopes and ledges at the top of the level means the player above them will always be on the ledges and can <abbr title="Well, until you reached Y=$8000 (if you disabled the screen barrier) since this ASM and SMW uses signed 16-bit Y position, so underflows will happen">infinity ascend</abbr> by repeatedly jumping.</li>
+ and most other blocks that don't look like they extend far off level.</li>
+ <li>Obviously, this should work with all custom blocks.</li>
+ <li>Placing slopes and ledges at the top of the level means the player above them will always be on the ledges and can infinity ascend by repeatedly jumping.</li>
+ <li>The blocks &ldquo;extending off borders&rdquo; also applies to layer 2 as well (if layer 2 is interactive). However, instead of using the level boundaries, it would use the boundaries of layer 2. Meaning if you place layer 2 blocks at the top edge
+ and they &ldquo;scroll down&rdquo; (which reveals garbage data from the top of the stage), the player's hitbox when processing layer 2 will be clamped to where the top row of layer 2 blocks are at instead of the top of the stage.</li>
+ <li>This patch does not work with SMW's mode 7 bosses as they use special platforms that are unrelated to map-16 blocks (I mean, why even need the player to go offscreen in these boss rooms, and you'll likely not going to use them in a chocolate hack).</li>
 </ul>

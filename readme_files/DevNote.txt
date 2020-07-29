@@ -1,0 +1,4 @@
+In case if you are wondering why are there unused files here (such as individual frames in the subfolders, and [Developer_HitboxAssetForGIF.png]), they are intended for development purposes only (such as if you are updating the readme).
+The boxes in the images are 1:1 ratio and accurately represents an example of the sprite size and the collision points used in the original SMW.
+
+The GIFs are made using ScreenToGif, an open source tool on making GIFs.
