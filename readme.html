@@ -33,7 +33,7 @@ the level border represented as a black vertical line, with &ldquo;<a href="http
 <img src="readme_files/ClampedPlayerHitbox.gif"><br>
 The green box is the &ldquo;actual&rdquo; player position. The dots in the black box represent the collision points, the way how SMW
 detects collision with objects is by checking if a given point is in one of the squares of the 16x16 grid. When the player's body goes past the level border,
-it will be clamped along the border of the level. All collision points will stop <b>together</b> if his position (<kbd>$7E0094</kbd> and <kbd>$7E0096</kbd>
+it will be clamped along the border of the level. All collision points will stop <b>together as one</b> if his position (<kbd>$7E0094</kbd> and <kbd>$7E0096</kbd>)
 happens to be out of bounds.</p>
 
 <p>For sprites, it is the same, but the collision points are stopped <b>individually</b> (all collision points will stop <b>at the same X or Y position as the line</b> rather than stopping
