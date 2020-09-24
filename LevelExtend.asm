@@ -36,18 +36,21 @@
 ;Sa-1 handling
 	!dp = $0000
 	!addr = $0000
+	!bank = $800000
 	!sa1 = 0
 	!gsu = 0
-
+	
 	if read1($00FFD6) == $15
 		sfxrom
 		!dp = $6000
 		!addr = !dp
+		!bank = $000000
 		!gsu = 1
 	elseif read1($00FFD5) == $23
 		sa1rom
 		!dp = $3000
 		!addr = $6000
+		!bank = $000000
 		!sa1 = 1
 	endif
 	macro define_sprite_table(name, name2, addr, addr_sa1)
@@ -110,13 +113,13 @@
 	%define_sprite_table(sprite_misc_1fd6, "1FD6", $1FD6, $766E)
 	%define_sprite_table(sprite_cape_disable_time, "1FE2", $1FE2, $7FD6)
 ;hijacks
-	org $00F451
+	org $00F451|!bank
 	autoclean JML ConstrainMarioCollisionPoints
 
-	org $0194D4
+	org $0194D4|!bank
 	autoclean JML Sprite_HorizLvl_blk_interYPos
 
-	org $0194EE
+	org $0194EE|!bank
 	autoclean JML Sprite_HorizLvl_blk_interXPos
 
 ;CODE_019461:        BD D4 14      LDA.W RAM_SpriteYHi,X      ;\Get carry if Y pos exceeds #$FF
@@ -143,7 +146,7 @@
 	org $019466
 	nop #4
 
-	org $01946C
+	org $01946C|!bank
 	autoclean JML Sprite_VertLvl_Blk_interXPos
 		;^You may be thinking, why not just have a hijack at $019466 to jump to [Sprite_VertLvl_Blk_interXPos]?
 		; Well, it is better to have shorter distance between the ORG hijack and the "destination address" (as
@@ -278,9 +281,19 @@ ConstrainMarioCollisionPoints: ;>JML from $00F451
 			endif
 			REP #$20
 			;LDA #$0190
+			PHX				;>X is being used at $00F44D.
+			LDX #$00
+			LDA $19
+			BEQ ....Mario16x16
+			LDA $73
+			BNE ....Mario16x16
+			....Mario16x32
+				INX #2
+			....Mario16x16
 			LDA $13D7|!addr			;>Level height, determines the bottom border position.
 			SEC
-			SBC #$0020
+			SBC.l .MarioHeightOffset,x
+			PLX
 			CMP $96				;\Check if bottom boundary is is above mario
 			BMI ..SetYPosCollisPoint	;/(mario is too far below)
 	
@@ -295,6 +308,10 @@ ConstrainMarioCollisionPoints: ;>JML from $00F451
 	
 	.Done
 		JML $00F461			;>Jump to the end of the positioning of collision points code.
+		
+	.MarioHeightOffset
+		dw $0020
+		dw $0010
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;Since vertical and horizontal level codes are separate,
 ;I don't need to check if it is, since it's already done.
