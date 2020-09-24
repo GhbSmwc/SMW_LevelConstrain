@@ -282,8 +282,8 @@ ConstrainMarioCollisionPoints: ;>JML from $00F451
 			REP #$20
 			;LDA #$0190
 			LDA $13D7|!addr			;>Level height, determines the bottom border position.
-			SEC
-			SBC #$0020
+			SEC				;\Use this for Small Mario. It is issues with Big non-crouching Mario.
+			SBC #$0020			;/
 			CMP $96				;\Check if bottom boundary is is above mario
 			BMI ..SetYPosCollisPoint	;/(mario is too far below)
 	
