@@ -279,13 +279,27 @@ ConstrainMarioCollisionPoints: ;>JML from $00F451
 				AND.b #%00000100
 				BEQ ..NormalYPosition
 			endif
+			PHX
+			LDX #$00
+			LDA $19
+			BEQ ....Normal
+			LDA $73
+			BNE ....Normal
+			LDA $187A|!addr
+			BNE ....Normal
+			
+			....Abnormal
+				INX #2
+			
+			....Normal
 			REP #$20
 			;LDA #$0190
-			LDA $13D7|!addr			;>Level height, determines the bottom border position.
-			SEC				;\Use this for Small Mario. It is issues with Big non-crouching Mario.
-			SBC #$0020			;/
-			CMP $96				;\Check if bottom boundary is is above mario
-			BMI ..SetYPosCollisPoint	;/(mario is too far below)
+			LDA $13D7|!addr					;>Level height, determines the bottom border position.
+			SEC						;\Use this for Small Mario. It is issues with Big non-crouching Mario.
+			SBC.l .OffsetHitboxYPositionBottomBorder,x	;/
+			PLX
+			CMP $96						;\Check if bottom boundary is is above mario
+			BMI ..SetYPosCollisPoint			;/(mario is too far below)
 	
 	..NormalYPosition
 		REP #$20
@@ -298,6 +312,10 @@ ConstrainMarioCollisionPoints: ;>JML from $00F451
 	
 	.Done
 		JML $00F461			;>Jump to the end of the positioning of collision points code.
+		
+	.OffsetHitboxYPositionBottomBorder
+		dw $0020
+		dw $0010
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;Since vertical and horizontal level codes are separate,
 ;I don't need to check if it is, since it's already done.
