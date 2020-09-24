@@ -281,19 +281,9 @@ ConstrainMarioCollisionPoints: ;>JML from $00F451
 			endif
 			REP #$20
 			;LDA #$0190
-			PHX				;>X is being used at $00F44D.
-			LDX #$00
-			LDA $19
-			BEQ ....Mario16x16
-			LDA $73
-			BNE ....Mario16x16
-			....Mario16x32
-				INX #2
-			....Mario16x16
 			LDA $13D7|!addr			;>Level height, determines the bottom border position.
 			SEC
-			SBC.l .MarioHeightOffset,x
-			PLX
+			SBC #$0020
 			CMP $96				;\Check if bottom boundary is is above mario
 			BMI ..SetYPosCollisPoint	;/(mario is too far below)
 	
@@ -308,10 +298,6 @@ ConstrainMarioCollisionPoints: ;>JML from $00F451
 	
 	.Done
 		JML $00F461			;>Jump to the end of the positioning of collision points code.
-		
-	.MarioHeightOffset
-		dw $0020
-		dw $0010
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;Since vertical and horizontal level codes are separate,
 ;I don't need to check if it is, since it's already done.
