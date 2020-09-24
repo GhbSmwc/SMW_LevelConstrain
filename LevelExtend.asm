@@ -113,13 +113,13 @@
 	%define_sprite_table(sprite_misc_1fd6, "1FD6", $1FD6, $766E)
 	%define_sprite_table(sprite_cape_disable_time, "1FE2", $1FE2, $7FD6)
 ;hijacks
-	org $00F451|!bank
+	org $00F451
 	autoclean JML ConstrainMarioCollisionPoints
 
-	org $0194D4|!bank
+	org $0194D4
 	autoclean JML Sprite_HorizLvl_blk_interYPos
 
-	org $0194EE|!bank
+	org $0194EE
 	autoclean JML Sprite_HorizLvl_blk_interXPos
 
 ;CODE_019461:        BD D4 14      LDA.W RAM_SpriteYHi,X      ;\Get carry if Y pos exceeds #$FF
@@ -146,7 +146,7 @@
 	org $019466
 	nop #4
 
-	org $01946C|!bank
+	org $01946C
 	autoclean JML Sprite_VertLvl_Blk_interXPos
 		;^You may be thinking, why not just have a hijack at $019466 to jump to [Sprite_VertLvl_Blk_interXPos]?
 		; Well, it is better to have shorter distance between the ORG hijack and the "destination address" (as
@@ -311,7 +311,7 @@ ConstrainMarioCollisionPoints: ;>JML from $00F451
 		STA $98
 	
 	.Done
-		JML $00F461			;>Jump to the end of the positioning of collision points code.
+		JML $00F461|!bank			;>Jump to the end of the positioning of collision points code.
 		
 	.OffsetHitboxYPositionBottomBorder
 		dw $0020
@@ -341,7 +341,7 @@ Sprite_HorizLvl_blk_interYPos:		;>JML from $0194D4
 	;REP #$20		;\Restore
 	LDA $0C			;|
 	CMP.W $13D7|!addr	;|>LM hijack to no longer always use YPos=$01B0
-	JML $0194D9		;/>Jump to where it checks if Y position is outside the level not to load block IDs outside the level (prevent freeze via loading invalid blocks)
+	JML $0194D9|!bank		;/>Jump to where it checks if Y position is outside the level not to load block IDs outside the level (prevent freeze via loading invalid blocks)
 	
 	if !Setting_LevelConstrain_RAM_Based != 0
 		+
@@ -396,7 +396,7 @@ Sprite_HorizLvl_blk_interXPos:		;>JML from $0194EE, 8-bit A from here.
 	JML $0194F2		;|/
 	
 	.CODE_0194B4
-	JML $0194B4		;/>Code that executes to ignore "blocks" outside the level.
+	JML $0194B4|!bank		;/>Code that executes to ignore "blocks" outside the level.
 	
 	if !Setting_LevelConstrain_RAM_Based != 0
 		+
@@ -537,6 +537,6 @@ Sprite_VertLvl_Blk_interXPos:		;>$JML from $01946C
 			CMP $5D
 			BCS .Out
 		.In
-			JML $019481
+			JML $019481|!bank
 		.Out
-			JML $0194B4
+			JML $0194B4|!bank

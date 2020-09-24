@@ -38,3 +38,13 @@ Version history (M/D/Y oldest to newest):
  -The readme is now HTML and how object interaction being clamped works being explained using GIFs improved.
  -Several REP/SEP #$20 are removed because they are unnecessary as the freeram check just checks only specific
   bit(s).
+9/24/2020 3.4 - Removal again.
+ -This bug is fixed: If you are at least Super Mario and not crouching (any 2-block tall hitbox of the player),
+  you'll interact the SECOND-bottommost row of blocks, meaning that if the user deliberately wanted no blocks on
+  the last row for things like secret exits you have to fly under, well you cannot (if not crouching). It was
+  revealed here:
+   https://www.smwcentral.net/?p=viewthread&t=102900&page=1&pid=1549174#p1549174
+  As a side note, Mario's Y position ($96-$97) is UNAFFECTED by whether or not you are crouching or not, also if
+  you are small mario or not. The only thing that is affected is if you are riding yoshi, your Y position is
+  subtracted by $0010. However, obvious that your hitbox shrinks when you crouch.
+ -JMLs back to SMW code now uses fastrom (sets the leftmost bit 23 of the 24-bit address).
